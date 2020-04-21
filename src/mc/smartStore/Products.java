@@ -1,16 +1,11 @@
-package russian.denis;
+package mc.smartStore;
 
-import com.mojang.datafixers.types.templates.Product;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Products {
     private static smartStore plugin;
@@ -106,7 +101,7 @@ public class Products {
                     int maxPrice = Products.getMaxPrice(items[i]);
                     Products.setPrice(items[i], Math.min(price + step, maxPrice));
                 }
-                Products.setCount(items[i], maxCount);
+                Products.setCount(items[i], count);
             }
         }
     }

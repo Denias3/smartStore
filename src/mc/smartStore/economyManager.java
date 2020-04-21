@@ -1,4 +1,4 @@
-package russian.denis;
+package mc.smartStore;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;

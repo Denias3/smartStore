@@ -1,8 +1,9 @@
 name: smartStroe
 version: 0.0.1
 author: Redase
-main: russian.denis.smartStore
+main: mc.smartStore.smartStore
+api-version: 1.15
 commands:
-  shop:
+  st:
     description: Команд ымашазина
     usage: /shop create/delete
