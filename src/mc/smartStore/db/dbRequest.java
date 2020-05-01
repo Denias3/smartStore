@@ -1,4 +1,4 @@
-package mc.smartStore;
+package mc.smartStore.db;
 
 import org.bukkit.Material;
 
@@ -9,12 +9,17 @@ public class dbRequest {
     public static String createTableShops (int DB){
         if (DB == 0)
             return "CREATE TABLE IF NOT EXISTS `stores` (" +
-                    "`store_id` INT(8) UNSIGNED NOT NULL ," +
+                    "`store_id` INT(8) UNSIGNED NOT NULL AUTO_INCREMENT ," +
                     "`name` VARCHAR(20) NOT NULL ," +
+                    "`UUID` VARCHAR(50) NOT NULL," +
                     "PRIMARY KEY (`store_id`)" +
                     ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
         else if (DB == 1)
-            return null;
+            return "CREATE TABLE IF NOT EXISTS `stores` (" +
+                    "`store_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                    "`name` VARCHAR(20) NOT NULL," +
+                    "`UUID` VARCHAR(50) NOT NULL" +
+                    ")";
         else
             return null;
     }
@@ -37,9 +42,23 @@ public class dbRequest {
                 "`step` INT(8) UNSIGNED NOT NULL ," +
                 "`place` INT(8) UNSIGNED NOT NULL ," +
                 "FOREIGN KEY (store_id) REFERENCES stores (store_id)" +
+                "ON DELETE CASCADE" +
                 ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
         else if (DB == 1)
-            return null;
+            return "CREATE TABLE IF NOT EXISTS `storeitems` (" +
+                    "`item_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                    "`store_id` INTEGER NOT NULL," +
+                    "`name` VARCHAR(30) NOT NULL," +
+                    "`max_price` INT(8) NOT NULL," +
+                    "`min_price` INT(8) NOT NULL," +
+                    "`price` INT(8) NOT NULL," +
+                    "`max_count` INT(8) NOT NULL," +
+                    "`count` INT(8) NOT NULL," +
+                    "`step` INT(8) NOT NULL," +
+                    "`place` INT(8) NOT NULL," +
+                    "FOREIGN KEY (store_id) REFERENCES stores (store_id)" +
+                    "ON DELETE CASCADE" +
+                    ")";
         else
             return null;
     }

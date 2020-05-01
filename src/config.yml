@@ -1,7 +1,11 @@
-Connection:
-  Host: 'localhost'
-  Port: 3306
-  Database: 'smartstore'
-  User: 'roor'
-  Password: 'root'
-  Enable: false
+connection:
+  host: 'localhost'
+  port: 3306
+  database: 'smartstore'
+  user: 'roor'
+  password: 'root'
+  enable: false
+
+refresh:
+  enable: false
+  timer: 600

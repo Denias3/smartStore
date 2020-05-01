@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-public class economyManager {
+public class EconomyManager {
     private static Economy e;
 
     public static void init() {
