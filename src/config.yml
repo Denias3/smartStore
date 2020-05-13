@@ -2,10 +2,10 @@ connection:
   host: 'localhost'
   port: 3306
   database: 'smartstore'
-  user: 'roor'
+  user: 'root'
   password: 'root'
   enable: false
 
 refresh:
-  enable: false
-  timer: 600
+  enable: true
+  timer: 144000

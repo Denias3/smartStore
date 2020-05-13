@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.List;
 
-import static mc.smartStore.smartStore.stores;
+import static mc.smartStore.SmartStore.stores;
 
 public class Change {
     private String []argc;
@@ -17,12 +17,12 @@ public class Change {
 
     private int place = -1;
     private String name = null;
-    private int max_price= -1;
-    private int min_price= -1;
-    private int price= -1;
+    private double max_price= -1;
+    private double min_price= -1;
+    private double price= -1;
     private int max_count= -1;
     private int count= -1;
-    private int step= -1;
+    private double step= -1;
 
     public String getError() {
         return error;
@@ -50,6 +50,13 @@ public class Change {
 
     private boolean repeatParam(int param, String param2){
         if (param != -1){
+            this.error = "Повторяющиеся параметры " +param2;
+            return false;
+        }
+        else return true;
+    }
+    private boolean repeatParam(double param, String param2){
+        if (param != (double)-1){
             this.error = "Повторяющиеся параметры " +param2;
             return false;
         }
@@ -88,35 +95,52 @@ public class Change {
                 if (!(place == -2 || (place >= 0 && place <= 35)))
                     return error("Такой ячейки нет", argc[i]);
             }
-            else if(argc[i].matches("n:[\\w]+")){
+            else if(argc[i].matches("n:[a-zA-Zа-яА-Я0-9_]+")){
                 if (!repeatParam(name, argc[i]))
                     return false;
-                if (argc[i].substring(2).length() <= 3)
-                    return error("Имя магазина должно содержать больше 3 букв", argc[i]);
                 name = argc[i].substring(2);
             }
-            else if(argc[i].matches("mp:[0-9]+")){
+            else if(argc[i].matches("mp:[0-9\\.]+")){
                 if (!repeatParam(max_price, argc[i]))
                     return false;
                 if (argc[i].substring(3).length() > 9)
                     return error("Параметр сликом большой", argc[i]);
-                max_price = Integer.parseInt(argc[i].substring(3));
+                try {
+                    max_price = Double.parseDouble(argc[i].substring(3));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    return error("Не правильное число", argc[i]);
+                }
                 ch++;
             }
-            else if(argc[i].matches("mip:[0-9]+")){
+            else if(argc[i].matches("mip:[0-9\\.]+")){
                 if (!repeatParam(min_price, argc[i]))
                     return false;
                 if (argc[i].substring(4).length() > 9)
                     return error("Параметр сликом большой", argc[i]);
-                min_price = Integer.parseInt(argc[i].substring(4));
+                try {
+                    min_price = Double.parseDouble(argc[i].substring(4));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    return error("Не правильное число", argc[i]);
+                }
                 ch++;
             }
-            else if(argc[i].matches("p:[0-9]+")){
+            else if(argc[i].matches("p:[0-9\\.]+")){
                 if (!repeatParam(price, argc[i]))
                     return false;
                 if (argc[i].substring(2).length() > 9)
                     return error("Параметр сликом большой", argc[i]);
-                price = Integer.parseInt(argc[i].substring(2));
+                try {
+                    price = Double.parseDouble(argc[i].substring(2));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    return error("Не правильное число", argc[i]);
+                }
+
                 ch++;
             }
             else if(argc[i].matches("mc:[0-9]+")){
@@ -135,12 +159,18 @@ public class Change {
                 count = Integer.parseInt(argc[i].substring(2));
                 ch++;
             }
-            else if(argc[i].matches("s:[0-9]+")){
+            else if(argc[i].matches("s:[0-9\\.]+")){
                 if (!repeatParam(step, argc[i]))
                     return false;
                 if (argc[i].substring(2).length() > 9)
                     return error("Параметр сликом большой", argc[i]);
-                step = Integer.parseInt(argc[i].substring(2));
+                try {
+                    step = Double.parseDouble(argc[i].substring(2));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    return error("Не правильное число", argc[i]);
+                }
                 ch++;
             }
             else
@@ -183,7 +213,7 @@ public class Change {
     public boolean execute(){
         Stores store = null;
         if (!name.equals("all")){
-            if (!smartStore.stores.containsKey(name))
+            if (!SmartStore.stores.containsKey(name))
                 return error("Магазин не существует", name);
             store = stores.get(name);
             if (store.getStatus() == 0)
@@ -198,10 +228,11 @@ public class Change {
                 if (store.items.containsKey(place))
                     setParams(store.items.get(place));
             }
+            store.calculVolume();
             updateView(store);
         }
         else {
-            for (HashMap.Entry<String, Stores> st : smartStore.stores.entrySet()) {
+            for (HashMap.Entry<String, Stores> st : SmartStore.stores.entrySet()) {
                 if (place == -2){
                     for (HashMap.Entry<Integer, StoreItems> item : st.getValue().items.entrySet())
                         setParams(item.getValue());
@@ -211,6 +242,7 @@ public class Change {
                         setParams(st.getValue().items.get(place));
 
                 }
+                st.getValue().calculVolume();
                 updateView(st.getValue());
             }
         }
@@ -268,7 +300,7 @@ public class Change {
                 sql.replace(sql.length() -5, sql.length(), "");
             }
         }
-        Message.toConsole(sql.toString());
+//        Message.toConsole(sql.toString());
         ApiDatabase.updateSQL(sql.toString());
 
     }

@@ -1,8 +1,6 @@
 package mc.smartStore;
 
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.Configuration;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 
@@ -17,7 +15,7 @@ public class Utils {
     };
 
     public static void allBust(){
-        for (HashMap.Entry<String, Stores> store : smartStore.stores.entrySet()){
+        for (HashMap.Entry<String, Stores> store : SmartStore.stores.entrySet()){
             if (store.getValue().getStatus() == 2)
                 store.getValue().bust();
         }

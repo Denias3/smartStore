@@ -2,17 +2,15 @@ package mc.smartStore;
 
 import mc.smartStore.db.ApiDatabase;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-public class smartStore extends JavaPlugin {
+public class SmartStore extends JavaPlugin {
 
     public static FileConfiguration languages;
     public static HashMap<String, Stores> stores = new HashMap<>();
@@ -35,11 +33,12 @@ public class smartStore extends JavaPlugin {
         }
         languages = YamlConfiguration.loadConfiguration(fileLanguages);
         ApiDatabase.loadAllStores();
-        Bukkit.getPluginManager().registerEvents(new HandlerManager(this), this);
-        getCommand("st").setExecutor(new CommandsManager(this));
+        Bukkit.getPluginManager().registerEvents(new HandlerManager(), this);
+        getCommand("st").setExecutor(new CommandsManager());
         EconomyManager.init();
         ApiDatabase.init();
         refresh = new RefreshManager();
+        refresh.run();
     }
 
     @Override
@@ -50,7 +49,7 @@ public class smartStore extends JavaPlugin {
             e.printStackTrace();
         }
     }
-    public static smartStore getPlugin() {
-        return smartStore.getPlugin(smartStore.class);
+    public static SmartStore getPlugin() {
+        return SmartStore.getPlugin(SmartStore.class);
     }
 }

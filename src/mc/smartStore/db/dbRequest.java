@@ -10,15 +10,17 @@ public class dbRequest {
         if (DB == 0)
             return "CREATE TABLE IF NOT EXISTS `stores` (" +
                     "`store_id` INT(8) UNSIGNED NOT NULL AUTO_INCREMENT ," +
-                    "`name` VARCHAR(20) NOT NULL ," +
+                    "`name` VARCHAR(20) NOT NULL," +
                     "`UUID` VARCHAR(50) NOT NULL," +
+                    "`capital` DOUBLE UNSIGNED DEFAULT 0.00,"+
                     "PRIMARY KEY (`store_id`)" +
                     ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
         else if (DB == 1)
             return "CREATE TABLE IF NOT EXISTS `stores` (" +
                     "`store_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
                     "`name` VARCHAR(20) NOT NULL," +
-                    "`UUID` VARCHAR(50) NOT NULL" +
+                    "`UUID` VARCHAR(50) NOT NULL," +
+                    "`capital` DOUBLE DEFAULT 0.00"+
                     ")";
         else
             return null;
@@ -34,9 +36,9 @@ public class dbRequest {
                     .filter(Material::isItem)
                     .map(m -> '\''+m.name()+'\'')
                     .collect(Collectors.joining(", ")) +") NOT NULL ," +
-                "`max_price` INT(8) UNSIGNED NOT NULL ," +
-                "`min_price` INT(8) UNSIGNED NOT NULL ," +
-                "`price` INT(8) UNSIGNED NOT NULL ," +
+                "`max_price` DOUBLE UNSIGNED NOT NULL ," +
+                "`min_price` DOUBLE UNSIGNED NOT NULL ," +
+                "`price` DOUBLE UNSIGNED NOT NULL ," +
                 "`max_count` INT(8) UNSIGNED NOT NULL ," +
                 "`count` INT(8) UNSIGNED NOT NULL ," +
                 "`step` INT(8) UNSIGNED NOT NULL ," +
@@ -49,9 +51,9 @@ public class dbRequest {
                     "`item_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
                     "`store_id` INTEGER NOT NULL," +
                     "`name` VARCHAR(30) NOT NULL," +
-                    "`max_price` INT(8) NOT NULL," +
-                    "`min_price` INT(8) NOT NULL," +
-                    "`price` INT(8) NOT NULL," +
+                    "`max_price` DOUBLE NOT NULL," +
+                    "`min_price` DOUBLE NOT NULL," +
+                    "`price` DOUBLE NOT NULL," +
                     "`max_count` INT(8) NOT NULL," +
                     "`count` INT(8) NOT NULL," +
                     "`step` INT(8) NOT NULL," +

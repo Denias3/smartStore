@@ -1,6 +1,6 @@
 package mc.smartStore.db;
 
-import mc.smartStore.smartStore;
+import mc.smartStore.SmartStore;
 import mc.smartStore.StoreItems;
 import mc.smartStore.Stores;
 import org.bukkit.Bukkit;
@@ -29,7 +29,7 @@ public class ApiDatabase {
     private static SQLite SQLITE;
     public static void init() {
 
-        Configuration cfg = smartStore.getPlugin().getConfig();
+        Configuration cfg = SmartStore.getPlugin().getConfig();
         if (cfg.getBoolean("connection.enable")){
             DB = 0;
             MY_SQL = new MySQL(
@@ -49,7 +49,7 @@ public class ApiDatabase {
         }
         else{
             DB = 1;
-            SQLITE = new SQLite(new File(smartStore.getPlugin().getDataFolder(), "database.db"));
+            SQLITE = new SQLite(new File(SmartStore.getPlugin().getDataFolder(), "database.db"));
             try(Statement statement = SQLITE.getConnection().createStatement()) {
                 statement.addBatch(dbRequest.createTableShops(DB));
                 statement.addBatch(dbRequest.createTableShopItems(DB));
@@ -66,7 +66,7 @@ public class ApiDatabase {
         if (store.check()) {
             return false;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             int nameId = 0;
             try (PreparedStatement stat = getConnection().prepareStatement("INSERT INTO `stores`(`name`, `UUID`) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS); PreparedStatement stat2 = getConnection().prepareStatement("INSERT INTO `storeitems`(`store_id`, `name`, `max_price`, `min_price`, `price`, `max_count`, `count`, `step`, `place`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 stat.setString(1, store.getName());
@@ -80,12 +80,12 @@ public class ApiDatabase {
                 for (HashMap.Entry<Integer, StoreItems> item : store.items.entrySet()) {
                     stat2.setInt(1, nameId);
                     stat2.setString(2, item.getValue().getItem().getType().name());
-                    stat2.setInt(3, item.getValue().getMaxPrice());
-                    stat2.setInt(4, item.getValue().getMinPrice());
-                    stat2.setInt(5, item.getValue().getPrice());
+                    stat2.setDouble(3, item.getValue().getMaxPrice());
+                    stat2.setDouble(4, item.getValue().getMinPrice());
+                    stat2.setDouble(5, item.getValue().getPrice());
                     stat2.setInt(6, item.getValue().getMaxCount());
                     stat2.setInt(7, item.getValue().getCount());
-                    stat2.setInt(8, item.getValue().getStep());
+                    stat2.setDouble(8, item.getValue().getStep());
                     stat2.setInt(9, item.getKey());
                     stat2.addBatch();
                 }
@@ -100,19 +100,20 @@ public class ApiDatabase {
     }
 
     public static void loadAllStores(){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(Statement stat = getConnection().createStatement()) {
-                try(ResultSet rs = stat.executeQuery("SELECT s.UUID, s.store_id, s.name AS name_store, si.name AS name_item, si.max_price, si.min_price, si.price, si.max_count, si.count, si.place, si.step FROM stores s INNER JOIN storeitems si ON s.store_id = si.store_id ORDER BY s.store_id ASC")){
+                try(ResultSet rs = stat.executeQuery("SELECT s.UUID, s.store_id, s.name AS name_store, s.capital, si.name AS name_item, si.max_price, si.min_price, si.price, si.max_count, si.count, si.place, si.step FROM stores s INNER JOIN storeitems si ON s.store_id = si.store_id ORDER BY s.store_id ASC")){
                     Stores store;
                     while(rs.next()) {
                         String storeName = rs.getString("name_store");
-                        if (smartStore.stores.containsKey(storeName)){
+                        if (SmartStore.stores.containsKey(storeName)){
 
-                            store = smartStore.stores.get(storeName);
+                            store = SmartStore.stores.get(storeName);
                         }
                         else {
-                            store = new Stores(4, storeName, 2, UUID.fromString(rs.getString("UUID")));
-                            smartStore.stores.put(storeName, store);
+                            store = new Stores(4, storeName, 2, UUID.fromString(rs.getString("UUID")), rs.getDouble("capital"));
+                            SmartStore.stores.put(storeName, store);
+                            store.calculVolume();
                         }
                         store.items.put(rs.getInt("place"), new StoreItems(
                                 rs.getString("name_item"),
@@ -126,7 +127,7 @@ public class ApiDatabase {
                         ));
                         Material mater = Material.getMaterial(rs.getString("name_item"));
                         if (mater == null){
-                            smartStore.stores.remove(storeName);
+                            SmartStore.stores.remove(storeName);
                             return;
                         }
                         store.getInventory().setItem(rs.getInt("place"), new ItemStack(mater));
@@ -139,7 +140,7 @@ public class ApiDatabase {
     }
 
     public static void updateSQL(String sql){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(Statement stat = getConnection().createStatement()) {
                 stat.executeUpdate(sql);
             }catch (SQLException e) {
@@ -149,7 +150,7 @@ public class ApiDatabase {
     }
 
     public static void updateUUID(String name, UUID u){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `stores` SET `UUID`=? WHERE `name`=?")) {
                 stat.setString(1, u.toString());
                 stat.setString(2, name);
@@ -161,7 +162,7 @@ public class ApiDatabase {
     }
 
     public static void updateCount(String name, int place, int count){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `count`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
                 stat.setInt(1, count);
                 stat.setInt(2, place);
@@ -172,8 +173,19 @@ public class ApiDatabase {
             }
         });
     }
+    public static void updateCapital(String name,  double capital){
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
+            try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `stores` SET `capital`=`capital`+? WHERE `name`=?")) {
+                stat.setDouble(1, capital);
+                stat.setString(2, name);
+                stat.executeUpdate();
+            }catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
     public static void updateMaxCount(String name, int place, int naxCount){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `max_count`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
                 stat.setInt(1, naxCount);
                 stat.setInt(2, place);
@@ -184,10 +196,10 @@ public class ApiDatabase {
             }
         });
     }
-    public static void updateMaxPrice(String name, int place, int maxPrice){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+    public static void updateMaxPrice(String name, int place, double maxPrice){
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `max_price`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
-                stat.setInt(1, maxPrice);
+                stat.setDouble(1, maxPrice);
                 stat.setInt(2, place);
                 stat.setString(3, name);
                 stat.executeUpdate();
@@ -196,10 +208,10 @@ public class ApiDatabase {
             }
         });
     }
-    public static void updateMinPrice(String name, int place, int minPrice){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+    public static void updateMinPrice(String name, int place, double minPrice){
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `min_price`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
-                stat.setInt(1, minPrice);
+                stat.setDouble(1, minPrice);
                 stat.setInt(2, place);
                 stat.setString(3, name);
                 stat.executeUpdate();
@@ -208,10 +220,10 @@ public class ApiDatabase {
             }
         });
     }
-    public static void updatePrice(String name, int place, int price){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+    public static void updatePrice(String name, int place, double price){
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `price`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
-                stat.setInt(1, price);
+                stat.setDouble(1, price);
                 stat.setInt(2, place);
                 stat.setString(3, name);
                 stat.executeUpdate();
@@ -220,10 +232,10 @@ public class ApiDatabase {
             }
         });
     }
-    public static void updateStep(String name, int place, int step){
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+    public static void updateStep(String name, int place, double step){
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("UPDATE `storeitems` SET `step`=? WHERE `place`=? AND `store_id`=(SELECT `store_id` FROM `stores` WHERE `name`=?)")) {
-                stat.setInt(1, step);
+                stat.setDouble(1, step);
                 stat.setInt(2, place);
                 stat.setString(3, name);
                 stat.executeUpdate();
@@ -235,7 +247,7 @@ public class ApiDatabase {
 
 
     public static void deleteStore(String name) {
-        Bukkit.getScheduler().runTaskAsynchronously(smartStore.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(SmartStore.getPlugin(), () -> {
             try(PreparedStatement stat = getConnection().prepareStatement("DELETE FROM `stores` WHERE `name`=?")) {
                 stat.setString(1, name);
                 stat.executeUpdate();

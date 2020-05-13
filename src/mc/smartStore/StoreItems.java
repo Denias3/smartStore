@@ -16,27 +16,27 @@ public class StoreItems {
 
     private ItemStack item;
 
-    public int getMaxPrice() {
+    public double getMaxPrice() {
         return maxPrice;
     }
 
-    public void setMaxPrice(int maxPrice) {
+    public void setMaxPrice(double maxPrice) {
         this.maxPrice = maxPrice;
     }
 
-    public int getMinPrice() {
+    public double getMinPrice() {
         return minPrice;
     }
 
-    public void setMinPrice(int minPrice) {
+    public void setMinPrice(double minPrice) {
         this.minPrice = minPrice;
     }
 
-    public int getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
@@ -56,11 +56,11 @@ public class StoreItems {
         this.count = count;
     }
 
-    public int getStep() {
+    public double getStep() {
         return step;
     }
 
-    public void setStep(int step) {
+    public void setStep(double step) {
         this.step = step;
     }
 
@@ -72,12 +72,12 @@ public class StoreItems {
         this.place = place;
     }
 
-    private int maxPrice = -1;
-    private int minPrice = -1;
-    private int price = -1;
+    private double maxPrice = -1;
+    private double minPrice = -1;
+    private double price = -1;
     private int maxCount = -1;
     private int count = -1 ;
-    private int step = -1;
+    private double step = -1;
     private int place = -1;
 
     public StoreItems(ItemStack item, int place){

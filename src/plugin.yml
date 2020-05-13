@@ -1,9 +1,10 @@
-name: smartStroe
-version: 0.1.0
+name: SmartStore
+version: 0.1.1
 author: Redase
-main: mc.smartStore.smartStore
-api-version: 1.15
+main: mc.smartStore.SmartStore
+api-version: 1.15.2
+depend: [Vault]
 commands:
   st:
-    description: Команд ымашазина
-    usage: /shop create/delete
+    description: Команды скупщка
+    usage: /st
