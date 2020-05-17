@@ -43,11 +43,7 @@ public class SmartStore extends JavaPlugin {
 
     @Override
     public void onDisable(){
-        try {
-            ApiDatabase.getConnection().close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        ApiDatabase.close();
     }
     public static SmartStore getPlugin() {
         return SmartStore.getPlugin(SmartStore.class);

@@ -1,6 +1,10 @@
 package mc.smartStore;
 
 import mc.smartStore.db.ApiDatabase;
+import mc.smartStore.handlers.MenuElement;
+import mc.smartStore.handlers.inventoryPlayer.*;
+import mc.smartStore.utils.PermissionClick;
+import mc.smartStore.utils.StatusStore;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -19,46 +23,16 @@ import java.util.*;
 public class Stores implements InventoryHolder {
 
 
+    private StatusStore status = StatusStore.MOVE;
     private String name;
     public int temp = -1;
-
-
-    private UUID u;
-    private Inventory inv;
-
-    public double getCapital() {
-        return capital;
-    }
-
-    public void setCapital(double capital) {
-        this.capital = capital;
-    }
-
-    private double capital = 0;
-
-    public double getVolume() {
-        return volume;
-    }
-
-    public void setVolume(double volume) {
-        this.volume = volume;
-    }
-
-    public double getCurVolume() {
-        return curVolume;
-    }
-
-    public void setCurVolume(double curVolume) {
-        this.curVolume = curVolume;
-    }
-
     private double volume = 0;
     private double curVolume = 0;
-
-    // 0 Перемещение, 1 = установка цены, 2 = сохранен
-    private int status = 0;
+    private double capital = 0;
+    private UUID u;
+    private Inventory inv;
     public HashMap<Integer, StoreItems> items = new HashMap<>();
-
+    public HashMap<Integer, MenuElement> menu = new HashMap<>();
 
     public Stores(int row, String n, Player p, UUID u){
         if (row <= 5 && row >= 0) {
@@ -71,7 +45,7 @@ public class Stores implements InventoryHolder {
         else
             p.sendMessage("Не правильное количесто строк в магазине");
     }
-    public Stores(int row, String n, int status, UUID u, double capital){
+    public Stores(int row, String n, StatusStore status, UUID u, double capital){
         if (row <= 5 && row >= 0) {
             this.u = u;
             this.capital = capital;
@@ -93,52 +67,35 @@ public class Stores implements InventoryHolder {
             item.getValue().print();
         }
     }
-
-    public UUID getU() {
-        return u;
-    }
-
-    public void setU(UUID u) {
-        this.u = u;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-    public int getStatus() {
-        return status;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     public void createMenuEdit(){
-        int size = inv.getSize();
-
-        for (int i = 8; i >= 0;i--) {
-            size--;
+        menu.clear();
+        Integer size = inv.getSize() - 1;
+        int i = 8;
+        while (size >= 0) {
             if (i == 0){
                 ItemStack item = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
                 ItemMeta meta = item.getItemMeta();
                 meta.setDisplayName(SmartStore.languages.getString("menu.save"));
                 item.setItemMeta(meta);
                 inv.setItem(size, item);
+                menu.put(size, new SaveStore(this, size));
             }
             else if (i == 1) {
-                if (status == 0){
+                if (status == StatusStore.MOVE){
                     ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
                     ItemMeta meta = item.getItemMeta();
                     meta.setDisplayName(SmartStore.languages.getString("menu.move"));
                     item.setItemMeta(meta);
                     inv.setItem(size, item);
+                    menu.put(size, new Toggle(this, size));
                 }
-                else if (status == 1){
+                else if (status == StatusStore.PRICE){
                     ItemStack item = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
                     ItemMeta meta = item.getItemMeta();
                     meta.setDisplayName(SmartStore.languages.getString("menu.data"));
                     item.setItemMeta(meta);
                     inv.setItem(size, item);
+                    menu.put(size, new Toggle(this, size));
                 }
 
             }
@@ -148,22 +105,29 @@ public class Stores implements InventoryHolder {
                 meta.setDisplayName(SmartStore.languages.getString("menu.delete"));
                 item.setItemMeta(meta);
                 inv.setItem(size, item);
+                menu.put(size, new DeleteStore(this, size));
             }
-            else {
+            else if (i >= 0) {
                 ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
                 ItemMeta meta = item.getItemMeta();
                 meta.setDisplayName("");
                 item.setItemMeta(meta);
                 inv.setItem(size, item);
             }
-
+            else {
+                if (inv.getItem(size) != null){
+                    menu.put(size, new ItemStoreSell(this, size));
+                }
+            }
+            size--;
+            i--;
         }
     }
     public void createMenu(){
-        int size = inv.getSize();
-
-        for (int i = 8; i >= 0;i--) {
-            size--;
+        menu.clear();
+        int size = inv.getSize() - 1;
+        int i = 8;
+        while (size >= 0) {
             if (i == 8){
                 ItemStack item = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
                 List<String> lore = new ArrayList<>();
@@ -173,6 +137,7 @@ public class Stores implements InventoryHolder {
                 item.setItemMeta(meta);
                 item.setLore(lore);
                 inv.setItem(size, item);
+                menu.put(size, new Edit(this, size));
             }
             else if (i == 0){
                 ItemStack item = new ItemStack(Material.BOOK);
@@ -198,22 +163,29 @@ public class Stores implements InventoryHolder {
                 item.setItemMeta(meta);
                 item.setLore(lore);
                 inv.setItem(size, item);
+                menu.put(size, new InfoStore(this, size));
             }
-            else {
+            else if (i >= 0) {
                 ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
                 ItemMeta meta = item.getItemMeta();
                 meta.setDisplayName("");
                 item.setItemMeta(meta);
                 inv.setItem(size, item);
             }
-
+            else {
+                if (inv.getItem(size) != null){
+                    menu.put(size, new ItemStoreSell(this, size));
+                }
+            }
+            size--;
+            i--;
         }
     }
 
     public void openStore(Player p){
-        if(status == 0)
+        if(status == StatusStore.MOVE)
             p.openInventory(inv);
-        else if (status == 1 || status == 2){
+        else if (status == StatusStore.PRICE || status == StatusStore.SAVE){
             for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
                 List<String> lore = new ArrayList<>();
                 ItemStack itemTemp = inv.getItem(item.getKey());
@@ -237,10 +209,10 @@ public class Stores implements InventoryHolder {
 
     public void updateStore(Player p){
         calculVolume();
-        if(status == 0)
+        if(status == StatusStore.MOVE)
             p.openInventory(inv);
         else {
-            if (status == 2){
+            if (status == StatusStore.SAVE){
                 List<String> lore = inv.getItem(inv.getSize() - 9).getLore();
                 if (lore != null){
                     lore.set(1, "§fОборот: §5" + String.format("%.2f", capital) + "§d$");
@@ -272,9 +244,9 @@ public class Stores implements InventoryHolder {
         p.updateInventory();
     }
     public void updateStore(){
-        if (status != 0) {
+        if (status != StatusStore.MOVE) {
             calculVolume();
-            if (status == 2){
+            if (status == StatusStore.SAVE){
                 List<String> lore = inv.getItem(inv.getSize() - 9).getLore();
                 if (lore != null){
                     lore.set(1, "§fОборот: §5" + String.format("%.2f", capital) + "§d$");
@@ -307,14 +279,10 @@ public class Stores implements InventoryHolder {
 
     public void toggleStatus () {
 
-        if (status == 0) {
+        if (status == StatusStore.MOVE) {
             ItemStack []arrItems;
-            status = 1;
-            ItemStack item = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
-            ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(SmartStore.languages.getString("menu.data"));
-            item.setItemMeta(meta);
-            inv.setItem(inv.getSize() - 8, item);
+            status = StatusStore.PRICE;
+            createMenuEdit();
             arrItems = inv.getContents();
             for (int i = 0; i < arrItems.length - 9; i++){
 
@@ -322,27 +290,27 @@ public class Stores implements InventoryHolder {
 //                    Message.toConsole("arrItems id = "+i + " name = "+ arrItems[i].getType().name() );
                     if (!items.containsKey(i)){
 //                        Message.toConsole("+++");
+                        menu.put(i, new ItemStoreSell(this, i));
                         items.put(i, new StoreItems(arrItems[i], i));
                     }
                     else {
                         if (inv.getItem(i) != null){
+                            menu.put(i, new ItemStoreSell(this, i));
                             items.get(i).setItem(inv.getItem(i));
                         }
                     }
                 }
                 else {
+                    menu.remove(i);
                     items.remove(i);
                 }
             }
 
         }
-        else if (status == 1){
-            status = 0;
-            ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-            ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(SmartStore.languages.getString("menu.move"));
-            item.setItemMeta(meta);
-            inv.setItem(inv.getSize() - 8, item);
+        else if (status == StatusStore.PRICE){
+            menu.clear();
+            status = StatusStore.MOVE;
+            createMenuEdit();
         }
         temp = -1;
 
@@ -492,18 +460,18 @@ public class Stores implements InventoryHolder {
             if (count < percent30)
             {
                 double minPrice = StoreItem.getMinPrice();
-                if (status == 2)
+                if (status == StatusStore.SAVE)
                     ApiDatabase.updatePrice(name, StoreItem.getPlace(), Math.max(price - step, minPrice));
                 StoreItem.setPrice(Math.max(price - step, minPrice));
             }
             else if (count > percent70)
             {
                 double maxPrice = StoreItem.getMaxPrice();
-                if (status == 2)
+                if (status == StatusStore.SAVE)
                     ApiDatabase.updatePrice(name, StoreItem.getPlace(), Math.min(price + step, maxPrice));
                 StoreItem.setPrice(Math.min(price + step, maxPrice));
             }
-            if (status == 2)
+            if (status == StatusStore.SAVE)
                 ApiDatabase.updateCount(name, StoreItem.getPlace(), maxCount);
             StoreItem.setCount(maxCount);
 
@@ -523,5 +491,46 @@ public class Stores implements InventoryHolder {
     @Override
     public Inventory getInventory() {
         return inv;
+    }
+    public double getCapital() {
+        return capital;
+    }
+
+    public void setCapital(double capital) {
+        this.capital = capital;
+    }
+
+    public double getVolume() {
+        return volume;
+    }
+
+    public void setVolume(double volume) {
+        this.volume = volume;
+    }
+
+    public double getCurVolume() {
+        return curVolume;
+    }
+
+    public void setCurVolume(double curVolume) {
+        this.curVolume = curVolume;
+    }
+    public UUID getU() {
+        return u;
+    }
+
+    public void setU(UUID u) {
+        this.u = u;
+    }
+
+    public void setStatus(StatusStore status) {
+        this.status = status;
+    }
+    public StatusStore getStatus() {
+        return status;
+    }
+
+    public String getName() {
+        return name;
     }
 }

@@ -2,6 +2,7 @@ package mc.smartStore.commands;
 
 import mc.smartStore.Message;
 import mc.smartStore.SmartStore;
+import mc.smartStore.utils.StatusStore;
 import org.bukkit.entity.Player;
 
 public class Open {
@@ -9,7 +10,7 @@ public class Open {
         if (p.hasPermission("ss.open")) {
             if (args.length > 1) {
                 if (SmartStore.stores.containsKey(args[1])){
-                    if (SmartStore.stores.get(args[1]).getStatus() == 2)
+                    if (SmartStore.stores.get(args[1]).getStatus() == StatusStore.SAVE)
                         SmartStore.stores.get(args[1]).openStore(p);
                     else if (p.hasPermission("ss.edit")){
                         SmartStore.stores.get(args[1]).openStore(p);

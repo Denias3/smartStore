@@ -1,8 +1,8 @@
 name: SmartStore
-version: 0.1.1
+version: 0.1.2
 author: Redase
 main: mc.smartStore.SmartStore
-api-version: 1.15.2
+api-version: 1.15
 depend: [Vault]
 commands:
   st:

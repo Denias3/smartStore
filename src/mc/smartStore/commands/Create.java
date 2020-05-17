@@ -13,7 +13,7 @@ import java.util.UUID;
 public class Create {
 
     public static void create (String []args, Player p){
-        if (p.hasPermission("ss.create") && p.hasPermission("ss.edit")) {
+        if (p.hasPermission("ss.create") || p.hasPermission("ss.edit")) {
             if (args.length > 1) {
                 if (args[1].length() <= 3 || args[1].length() > 20){
                     p.sendMessage(Message.prefix +"Название магазина должно быть больше чем 3 символа и меньше чем 20");

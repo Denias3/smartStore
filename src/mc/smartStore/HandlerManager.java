@@ -1,9 +1,10 @@
 package mc.smartStore;
 
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import mc.smartStore.handlers.menuStore.InventoryPlayer;
+import mc.smartStore.handlers.InventoryPlayer;
 import mc.smartStore.handlers.TabComplete.TabChange;
-import mc.smartStore.handlers.menuStore.InventoryStore;
+import mc.smartStore.handlers.InventoryStore;
+import mc.smartStore.utils.StatusStore;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,31 +19,28 @@ import java.util.*;
 public class HandlerManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void shopClick(InventoryClickEvent e) {
+    public void InventoryClick(InventoryClickEvent e) {
         Inventory i = e.getInventory();
-        Player p =  (Player) e.getView().getPlayer();
         if (i.getHolder() instanceof Stores) {
             Stores stores = (Stores)i.getHolder();
             if (i.equals(e.getClickedInventory())) {
-                InventoryStore.inventoryStore(e, i, p, stores);
+                InventoryStore.inventoryStore(e, stores);
             } else {
                 InventoryPlayer.inventoryPlayer(e, stores);
             }
         }
     }
     @EventHandler
-    public void shopDrag(InventoryDragEvent e) {
+    public void Drag(InventoryDragEvent e) {
         Inventory de = e.getInventory();
         if (de.getHolder() instanceof Stores) {
             Stores stores = (Stores)de.getHolder();
-//            if (stores.getStatus() != 0) {
-                e.setCancelled(true);
-//            }
+            e.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void chat(AsyncTabCompleteEvent e) {
+    public void TabComplete(AsyncTabCompleteEvent e) {
         List<String> comp = new ArrayList<>();
         if(!(e.getSender() instanceof Player)) {
             return;
@@ -94,12 +92,12 @@ public class HandlerManager implements Listener {
         }
     }
     @EventHandler
-    public void entityEvent(PlayerInteractEntityEvent e) {
+    public void InteractEntity(PlayerInteractEntityEvent e) {
         for (HashMap.Entry<String, Stores> store : SmartStore.stores.entrySet()) {
             if (e.getRightClicked().getUniqueId().equals(store.getValue().getU())){
                 e.setCancelled(true);
                 Player p = e.getPlayer();
-                if (store.getValue().getStatus() != 2)
+                if (store.getValue().getStatus() != StatusStore.SAVE)
                 {
                     if (p.hasPermission("ss.edit"))
                         store.getValue().openStore(p);

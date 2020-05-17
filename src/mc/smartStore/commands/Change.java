@@ -3,6 +3,8 @@ package mc.smartStore.commands;
 
 import mc.smartStore.*;
 import mc.smartStore.db.ApiDatabase;
+import mc.smartStore.utils.DBType;
+import mc.smartStore.utils.StatusStore;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
@@ -216,7 +218,7 @@ public class Change {
             if (!SmartStore.stores.containsKey(name))
                 return error("Магазин не существует", name);
             store = stores.get(name);
-            if (store.getStatus() == 0)
+            if (store.getStatus() == StatusStore.MOVE)
                 return error("Магазин находится в режиме перемещения", name);
             if (!store.items.containsKey(place) && place !=- 2)
                 return error("Этого слота нет в магазине", (place + 1)+"");
@@ -246,13 +248,13 @@ public class Change {
                 updateView(st.getValue());
             }
         }
-        if (!name.equals("all") && store.getStatus() != 2)  return true;
+        if (!name.equals("all") && store.getStatus() != StatusStore.SAVE)  return true;
         else executeDB();
         return true;
     }
     private void executeDB(){
         StringBuilder sql;
-        if (ApiDatabase.DB == 0){
+        if (ApiDatabase.DB == DBType.MYSQL){
             sql = new StringBuilder("UPDATE stores s INNER JOIN storeitems si ON s.store_id = si.store_id SET ");
             if (max_price != -1)
                 sql.append("si.max_price = ").append(max_price).append(',');

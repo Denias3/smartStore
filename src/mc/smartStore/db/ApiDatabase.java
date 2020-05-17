@@ -3,6 +3,8 @@ package mc.smartStore.db;
 import mc.smartStore.SmartStore;
 import mc.smartStore.StoreItems;
 import mc.smartStore.Stores;
+import mc.smartStore.utils.DBType;
+import mc.smartStore.utils.StatusStore;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.Configuration;
@@ -14,24 +16,30 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class ApiDatabase {
-    public static int DB;
-
     public static Connection getConnection() throws SQLException {
-        if (DB == 0){
+        if (DB == DBType.MYSQL){
             return MY_SQL.getConnection();
         }
         else {
             return SQLITE.getConnection();
         }
     }
-
+    public static void close(){
+        if (DB == DBType.MYSQL){
+            MY_SQL.close();
+        }
+        else {
+            SQLITE.close();
+        }
+    }
+    public static DBType DB;
     private static MySQL MY_SQL;
     private static SQLite SQLITE;
     public static void init() {
 
         Configuration cfg = SmartStore.getPlugin().getConfig();
         if (cfg.getBoolean("connection.enable")){
-            DB = 0;
+            DB = DBType.MYSQL;
             MY_SQL = new MySQL(
                     cfg.getString("connection.user"),
                     cfg.getString("connection.password"),
@@ -40,19 +48,19 @@ public class ApiDatabase {
                     cfg.getInt("connection.port")
             );
             try(Statement statement = MY_SQL.getConnection().createStatement()) {
-                statement.addBatch(dbRequest.createTableShops(DB));
-                statement.addBatch(dbRequest.createTableShopItems(DB));
+                statement.addBatch(dbRequest.createTableShops());
+                statement.addBatch(dbRequest.createTableShopItems());
                 statement.executeBatch();
             } catch(SQLException e) {
                 e.printStackTrace();
             }
         }
         else{
-            DB = 1;
+            DB = DBType.SQLITE;
             SQLITE = new SQLite(new File(SmartStore.getPlugin().getDataFolder(), "database.db"));
             try(Statement statement = SQLITE.getConnection().createStatement()) {
-                statement.addBatch(dbRequest.createTableShops(DB));
-                statement.addBatch(dbRequest.createTableShopItems(DB));
+                statement.addBatch(dbRequest.createTableShops());
+                statement.addBatch(dbRequest.createTableShopItems());
                 statement.executeBatch();
             } catch(SQLException e) {
                 e.printStackTrace();
@@ -90,7 +98,7 @@ public class ApiDatabase {
                     stat2.addBatch();
                 }
                 stat2.executeBatch();
-                store.setStatus(2);
+                store.setStatus(StatusStore.SAVE);
                 store.createMenu();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -111,7 +119,7 @@ public class ApiDatabase {
                             store = SmartStore.stores.get(storeName);
                         }
                         else {
-                            store = new Stores(4, storeName, 2, UUID.fromString(rs.getString("UUID")), rs.getDouble("capital"));
+                            store = new Stores(4, storeName, StatusStore.SAVE, UUID.fromString(rs.getString("UUID")), rs.getDouble("capital"));
                             SmartStore.stores.put(storeName, store);
                             store.calculVolume();
                         }

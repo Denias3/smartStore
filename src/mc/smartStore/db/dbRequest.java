@@ -1,13 +1,14 @@
 package mc.smartStore.db;
 
+import mc.smartStore.utils.DBType;
 import org.bukkit.Material;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class dbRequest {
-    public static String createTableShops (int DB){
-        if (DB == 0)
+    public static String createTableShops (){
+        if (ApiDatabase.DB == DBType.MYSQL)
             return "CREATE TABLE IF NOT EXISTS `stores` (" +
                     "`store_id` INT(8) UNSIGNED NOT NULL AUTO_INCREMENT ," +
                     "`name` VARCHAR(20) NOT NULL," +
@@ -15,7 +16,7 @@ public class dbRequest {
                     "`capital` DOUBLE UNSIGNED DEFAULT 0.00,"+
                     "PRIMARY KEY (`store_id`)" +
                     ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
-        else if (DB == 1)
+        else if (ApiDatabase.DB == DBType.SQLITE)
             return "CREATE TABLE IF NOT EXISTS `stores` (" +
                     "`store_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
                     "`name` VARCHAR(20) NOT NULL," +
@@ -27,8 +28,8 @@ public class dbRequest {
     }
 
 
-    public static String createTableShopItems (int DB){
-        if (DB == 0)
+    public static String createTableShopItems (){
+        if (ApiDatabase.DB == DBType.MYSQL)
             return "CREATE TABLE IF NOT EXISTS `storeitems` (" +
                 "`item_id` INT(8) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                 "`store_id` INT(8) UNSIGNED NOT NULL ," +
@@ -46,7 +47,7 @@ public class dbRequest {
                 "FOREIGN KEY (store_id) REFERENCES stores (store_id)" +
                 "ON DELETE CASCADE" +
                 ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
-        else if (DB == 1)
+        else if (ApiDatabase.DB == DBType.SQLITE)
             return "CREATE TABLE IF NOT EXISTS `storeitems` (" +
                     "`item_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
                     "`store_id` INTEGER NOT NULL," +

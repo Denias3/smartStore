@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class List {
     public static void list (Player p){
-        if (p.hasPermission("ss.list")) {
+        if (p.hasPermission("ss.list") || p.hasPermission("ss.edit")) {
             Set<String> keys = SmartStore.stores.keySet();
             String list = String.join(", ", keys);
             p.sendMessage(list);
