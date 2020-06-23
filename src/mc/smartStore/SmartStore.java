@@ -14,7 +14,6 @@ public class SmartStore extends JavaPlugin {
 
     public static FileConfiguration languages;
     public static HashMap<String, Stores> stores = new HashMap<>();
-    public static RefreshManager refresh;
 
     @Override
     public void onEnable() {
@@ -37,8 +36,6 @@ public class SmartStore extends JavaPlugin {
         getCommand("st").setExecutor(new CommandsManager());
         EconomyManager.init();
         ApiDatabase.init();
-        refresh = new RefreshManager();
-        refresh.run();
     }
 
     @Override

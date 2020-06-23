@@ -7,10 +7,6 @@ public class MySQL extends AbstractSql{
         super(user, password, database, host, port);
     }
 
-    @Override
-    public DBType getType() {
-        return DBType.MYSQL;
-    }
 
     @Override
     public String getDriver() {

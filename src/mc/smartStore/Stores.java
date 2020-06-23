@@ -2,8 +2,7 @@ package mc.smartStore;
 
 import mc.smartStore.db.ApiDatabase;
 import mc.smartStore.handlers.MenuElement;
-import mc.smartStore.handlers.inventoryPlayer.*;
-import mc.smartStore.utils.PermissionClick;
+import mc.smartStore.handlers.inventoryStore.*;
 import mc.smartStore.utils.StatusStore;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -11,6 +10,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -25,99 +25,114 @@ public class Stores implements InventoryHolder {
 
     private StatusStore status = StatusStore.MOVE;
     private String name;
+    private int row;
     public int temp = -1;
-    private double volume = 0;
-    private double curVolume = 0;
     private double capital = 0;
     private UUID u;
+    private UUID pl;
     private Inventory inv;
     public HashMap<Integer, StoreItems> items = new HashMap<>();
     public HashMap<Integer, MenuElement> menu = new HashMap<>();
 
-    public Stores(int row, String n, Player p, UUID u){
-        if (row <= 5 && row >= 0) {
+    public Stores(int row, String n, Player p, UUID u, double capital){
+        if (row <= 5 && row >= 1) {
+            this.capital = capital;
             this.u = u;
-            name = n;
+            this.row = row;
+            this.name = n;
+            pl = p.getUniqueId();
             inv = Bukkit.createInventory(this, (row + 1) * 9, name);
             createMenuEdit();
             p.openInventory(inv);
         }
         else
-            p.sendMessage("Не правильное количесто строк в магазине");
+            p.sendMessage(Message.notCountLineStore());
     }
-    public Stores(int row, String n, StatusStore status, UUID u, double capital){
-        if (row <= 5 && row >= 0) {
+    public Stores(int row, String n, StatusStore status, UUID u, UUID pl, double capital){
+        if (row <= 5 && row >= 1) {
             this.u = u;
             this.capital = capital;
-            name = n;
+            this.row = row;
+            this.name = n;
+            this.pl = pl;
             inv = Bukkit.createInventory(this, (row + 1) * 9, name);
             this.status = status;
             createMenu();
         }
         else
-            Message.toConsole("Не правильное количесто строк в магазине");
+            Message.toConsole(Message.notCountLineStore());
     }
 
     public void print(){
         Message.toConsole("name: "+ name);
-        Message.toConsole("UUID: "+ u.toString());
+        Message.toConsole("UUID Villager: "+ u.toString());
+        Message.toConsole("UUID owner: "+ pl.toString());
         Message.toConsole("status: "+ status);
         Message.toConsole("temp: "+ temp);
         for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
             item.getValue().print();
         }
     }
+
+    private void createMenuElement(int id, Material material, String name,  List<String> lore, MenuElement menuElement){
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        item.setLore(lore);
+        inv.setItem(id, item);
+        menu.put(id, menuElement);
+    }
+    private void createMenuElement(int id, Material material, String name, MenuElement menuElement){
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        inv.setItem(id, item);
+        menu.put(id, menuElement);
+    }
+    private void createMenuElement(int id, StoreItems item, List<String> lore){
+//                ItemStack itemTemp = inv.getItem(item.getKey());
+
+        item.getItem().setLore(lore);
+        inv.setItem(id, item.getItem());
+    }
+    private void createMenuElement(int id, Material material, String name){
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        inv.setItem(id, item);
+    }
+
     public void createMenuEdit(){
         menu.clear();
-        Integer size = inv.getSize() - 1;
+        int size = inv.getSize() - 1;
         int i = 8;
         while (size >= 0) {
             if (i == 0){
-                ItemStack item = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName(SmartStore.languages.getString("menu.save"));
-                item.setItemMeta(meta);
-                inv.setItem(size, item);
-                menu.put(size, new SaveStore(this, size));
+                createMenuElement(size, Material.LIME_STAINED_GLASS_PANE, Message.menuSave(), new SaveStore(this, size));
             }
             else if (i == 1) {
                 if (status == StatusStore.MOVE){
-                    ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-                    ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(SmartStore.languages.getString("menu.move"));
-                    item.setItemMeta(meta);
-                    inv.setItem(size, item);
-                    menu.put(size, new Toggle(this, size));
+                    createMenuElement(size, Material.ORANGE_STAINED_GLASS_PANE, Message.menuMove(), new Toggle(this, size));
                 }
                 else if (status == StatusStore.PRICE){
-                    ItemStack item = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
-                    ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(SmartStore.languages.getString("menu.data"));
-                    item.setItemMeta(meta);
-                    inv.setItem(size, item);
-                    menu.put(size, new Toggle(this, size));
+                    createMenuElement(size, Material.BLUE_STAINED_GLASS_PANE, Message.menuData(), new Toggle(this, size));
                 }
-
             }
             else if (i == 8){
-                ItemStack item = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName(SmartStore.languages.getString("menu.delete"));
-                item.setItemMeta(meta);
-                inv.setItem(size, item);
-                menu.put(size, new DeleteStore(this, size));
+                createMenuElement(size, Material.RED_STAINED_GLASS_PANE, Message.menuDelete(), new DeleteStore(this, size));
             }
             else if (i >= 0) {
-                ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName("");
-                item.setItemMeta(meta);
-                inv.setItem(size, item);
+                createMenuElement(size, Material.GRAY_STAINED_GLASS_PANE, "");
             }
             else {
                 if (inv.getItem(size) != null){
                     menu.put(size, new ItemStoreSell(this, size));
                 }
+                else
+                    menu.put(size, new Move(this, size));
             }
             size--;
             i--;
@@ -129,48 +144,13 @@ public class Stores implements InventoryHolder {
         int i = 8;
         while (size >= 0) {
             if (i == 8){
-                ItemStack item = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
-                List<String> lore = new ArrayList<>();
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName("Редактировать");
-                lore.add("§cДля админов");
-                item.setItemMeta(meta);
-                item.setLore(lore);
-                inv.setItem(size, item);
-                menu.put(size, new Edit(this, size));
+                createMenuElement(size, Material.YELLOW_STAINED_GLASS_PANE, Message.menuEdit(), Message.menuEditDescription(),new Edit(this, size));
             }
             else if (i == 0){
-                ItemStack item = new ItemStack(Material.BOOK);
-                List<String> lore = new ArrayList<>();
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName("Информация");
-                lore.add("§7Нажмите чтобы отобразить в чате");
-                lore.add("§fОборот: §5" + String.format("%.2f", capital)+ "§d$");
-                lore.add("§fОбъем: §5" + String.format("%.2f", curVolume)+ "§d$" +"§f/§5" +
-                        String.format("%.2f", volume)+ "§d$");
-                lore.add("");
-                lore.add("§5§l| §fКаждые 2 часа количество товара");
-                lore.add("§5§l| §fпополняется до максимума");
-                lore.add("§5§l| §fи цена меняется в зависимости");
-                lore.add("§5§l| §fот того какое количество отсалось.");
-                lore.add("§5§l| §fКоличество общее для всех.");
-                lore.add("§5§l| §fЕсли продали больше 70% то");
-                lore.add("§5§l| §fцена уменьшается на шаг.");
-                lore.add("§5§l| §fЕсли продали меньше 30% то");
-                lore.add("§5§l| §fцена увеличивается на шаг.");
-                lore.add("§5§l| §fЕсли продали в районе от ");
-                lore.add("§5§l| §f30% до 70% то цена не меняется.");
-                item.setItemMeta(meta);
-                item.setLore(lore);
-                inv.setItem(size, item);
-                menu.put(size, new InfoStore(this, size));
+                createMenuElement(size, Material.BOOK, Message.menuInfo(), Message.menuInfoMore(this),new InfoStore(this, size));
             }
             else if (i >= 0) {
-                ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-                ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName("");
-                item.setItemMeta(meta);
-                inv.setItem(size, item);
+                createMenuElement(size, Material.GRAY_STAINED_GLASS_PANE, "");
             }
             else {
                 if (inv.getItem(size) != null){
@@ -182,99 +162,68 @@ public class Stores implements InventoryHolder {
         }
     }
 
+    public void playerInvSellMenu(Player p){
+        PlayerInventory invP = p.getInventory();
+        for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
+            HashMap<Integer, ? extends ItemStack> tempItems = invP.all(item.getValue().getItem().getType());
+            for (HashMap.Entry<Integer, ? extends ItemStack> tempItem : tempItems.entrySet()){
+                List<String> lore = new ArrayList<>();
+                lore.add("§7Shift + ЛКМ - Продать (§5" + String.format("%.2f", item.getValue().getSellMore(tempItem.getValue().getAmount()))+"§d$§7)");
+
+//                lore.add(tempItem.getValue().getAmount()+" Amount");
+//                lore.add(String.format("%.10f",tempItem.getValue().getAmount() *item.getValue().getDerivative()) +" Amount * der");
+//                lore.add(String.format("%.10f",item.getValue().getDerivative())+" Derivative");
+//                lore.add(String.format("%.10f", item.getValue().WarehousePercentage())+" test");
+                tempItem.getValue().setLore(lore);
+                invP.setItem(tempItem.getKey(), tempItem.getValue());
+            }
+        }
+        p.updateInventory();
+    }
+
     public void openStore(Player p){
         if(status == StatusStore.MOVE)
             p.openInventory(inv);
         else if (status == StatusStore.PRICE || status == StatusStore.SAVE){
             for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
-                List<String> lore = new ArrayList<>();
-                ItemStack itemTemp = inv.getItem(item.getKey());
-                StoreItems itemp = item.getValue();
-                lore.add("§7ЛКМ - Продать одну штуку");
-                lore.add("§7Shift + ЛКМ - Продать все что есть");
-                lore.add("§7Shift + ПКМ - Информация о товаре");
-                lore.add("");
-                lore.add("§f§lЦена продажи");
-                lore.add("§fЗа штуку: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice()))  + "§d$");
-                lore.add("§fЗа стак: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice() * 64)) + "§d$");
-                lore.add("");
-                lore.add("§fКоличество: §5" + (itemp.getCount() == -1 ? "" : itemp.getCount()) +
-                        "§f/§5" +(itemp.getMaxCount() == -1 ? "" : itemp.getMaxCount()));
-                if (itemTemp != null)
-                    itemTemp.setLore(lore);
+                createMenuElement(item.getKey(), item.getValue(), Message.menuProduct(item.getValue()));
+
             }
             p.openInventory(inv);
+            if (status == StatusStore.SAVE){
+                playerInvSellMenu(p);
+            }
         }
     }
 
     public void updateStore(Player p){
-        calculVolume();
         if(status == StatusStore.MOVE)
             p.openInventory(inv);
         else {
-            if (status == StatusStore.SAVE){
-                List<String> lore = inv.getItem(inv.getSize() - 9).getLore();
-                if (lore != null){
-                    lore.set(1, "§fОборот: §5" + String.format("%.2f", capital) + "§d$");
-                    lore.set(2, "§fОбъем: §5" + String.format("%.2f", curVolume)+ "§d$" +"§f/§5" +
-                            String.format("%.2f", volume)+ "§d$");
-                    inv.getItem(inv.getSize() - 9).setLore(lore);
-                }
-
-            }
             for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
-                List<String> lore = new ArrayList<>();
-                ItemStack itemTemp = inv.getItem(item.getKey());
-                StoreItems itemp = item.getValue();
-                lore.add("§7ЛКМ - Продать одну штуку");
-                lore.add("§7Shift + ЛКМ - Продать все что есть");
-                lore.add("§7Shift + ПКМ - Информация о товаре");
-                lore.add("");
-                lore.add("§f§lЦена продажи");
-                lore.add("§fЗа штуку: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice()))  + "§d$");
-                lore.add("§fЗа стак: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice() * 64)) + "§d$");
-                lore.add("");
-                lore.add("§fКоличество: §5" + (itemp.getCount() == -1 ? "" : itemp.getCount()) +
-                        "§f/§5" +(itemp.getMaxCount() == -1 ? "" : itemp.getMaxCount()));
-                if (itemTemp != null)
-                    itemTemp.setLore(lore);
-
+                createMenuElement(item.getKey() ,item.getValue(), Message.menuProduct(item.getValue()));
+            }
+            if (status == StatusStore.SAVE)
+            {
+                createMenu();
+                List<HumanEntity> views = inv.getViewers();
+                for (HumanEntity pl:views){
+                    playerInvSellMenu((Player) pl);
+                }
+//                playerInvSellMenu(p);
             }
         }
         p.updateInventory();
     }
     public void updateStore(){
         if (status != StatusStore.MOVE) {
-            calculVolume();
-            if (status == StatusStore.SAVE){
-                List<String> lore = inv.getItem(inv.getSize() - 9).getLore();
-                if (lore != null){
-                    lore.set(1, "§fОборот: §5" + String.format("%.2f", capital) + "§d$");
-                    lore.set(2, "§fОбъем: §5" + String.format("%.2f", curVolume)+ "§d$" +"§f/§5" +
-                            String.format("%.2f", volume)+ "§d$");
-                    inv.getItem(inv.getSize() - 9).setLore(lore);
-                }
-            }
             for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
-                List<String> lore = new ArrayList<>();
-                ItemStack itemTemp = inv.getItem(item.getKey());
-                StoreItems itemp = item.getValue();
-                lore.add("§7ЛКМ - Продать одну штуку");
-                lore.add("§7Shift + ЛКМ - Продать все что есть");
-                lore.add("§7Shift + ПКМ - Информация о товаре");
-                lore.add("");
-                lore.add("§f§lЦена продажи");
-                lore.add("§fЗа штуку: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice()))  + "§d$");
-                lore.add("§fЗа стак: §5" + (itemp.getPrice() == -1 ? "" : String.format("%.2f", itemp.getPrice() * 64)) + "§d$");
-                lore.add("");
-                lore.add("§fКоличество: §5" + (itemp.getCount() == -1 ? "" : itemp.getCount()) +
-                        "§f/§5" +(itemp.getMaxCount() == -1 ? "" : itemp.getMaxCount()));
-                if (itemTemp != null)
-                    itemTemp.setLore(lore);
-
+                createMenuElement(item.getKey() ,item.getValue(), Message.menuProduct(item.getValue()));
             }
-
+            if (status == StatusStore.SAVE)
+                createMenu();
         }
+
     }
 
     public void toggleStatus () {
@@ -321,12 +270,10 @@ public class Stores implements InventoryHolder {
         p.sendMessage(new ComponentBuilder("§6Параметры товара: ")
                 .append(inv.getItem(id).getType().name())
                 .append(" ("+ idi)
-                .append(")\n§eМакс цена: §6" + (items.get(id).getMaxPrice() == -1 ? "" : String.format("%.2f", items.get(id).getMaxPrice())))
-                .append("\n§eМин цена: §6" + (items.get(id).getMinPrice() == -1 ? "" : String.format("%.2f", items.get(id).getMinPrice())))
-                .append("\n§eЦена: §6" + (items.get(id).getPrice() == -1 ? "" : String.format("%.2f", items.get(id).getPrice())))
-                .append("\n§eМакс количество: §6" + (items.get(id).getMaxCount() == -1 ? "" : items.get(id).getMaxCount()))
-                .append("\n§eКоличество: §6" + (items.get(id).getCount() == -1 ? "" : items.get(id).getCount()))
-                .append("\n§eШаг: §6" + (items.get(id).getStep() == -1 ? "" : String.format("%.2f", items.get(id).getStep())))
+                .append(")\n§eБазовая цена: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getBasePrice())))
+                .append("\n§eКоличество на складе: §6" + (items.get(id).getCount() == -1 ? "" : items.get(id).getCount()))
+                .append("\n§eЦена продажи: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getSellOne())))
+                .append("\n§eЦена покупки: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getBuyOne())))
                 .create());
 
     }
@@ -336,30 +283,16 @@ public class Stores implements InventoryHolder {
         p.sendMessage(new ComponentBuilder("§6Измегить параметры товара: ")
                 .append(inv.getItem(id).getType().name())
                 .append(" ("+ idi)
-                .append(")\n§eМакс цена: §6" + (items.get(id).getMaxPrice() == -1 ? "" : String.format("%.2f", items.get(id).getMaxPrice())))
+                .append(")\n§eБазовая цена: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getBasePrice())))
                 .append(" §e[§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" mp:"))
+                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st price "+name+" "+ idi+" "))
                 .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
-                .append("\n§eМин цена: §6" + (items.get(id).getMinPrice() == -1 ? "" : String.format("%.2f", items.get(id).getMinPrice())))
+                .append("\n§eКоличество на складе: §6" + (items.get(id).getCount() == -1 ? "" : items.get(id).getCount()))
                 .append(" §e[§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" mip:"))
+                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st count "+name+" "+ idi+" "))
                 .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
-                .append("\n§eЦена: §6" + (items.get(id).getPrice() == -1 ? "" : String.format("%.2f", items.get(id).getPrice())))
-                .append(" §e[§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" p:"))
-                .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
-                .append("\n§eМакс количество: §6" + (items.get(id).getMaxCount() == -1 ? "" : items.get(id).getMaxCount()))
-                .append(" [§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" mc:"))
-                .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
-                .append("\n§eКоличество: §6" + (items.get(id).getCount() == -1 ? "" : items.get(id).getCount()))
-                .append(" §e[§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" c:"))
-                .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
-                .append("\n§eШаг: §6" + (items.get(id).getStep() == -1 ? "" : String.format("%.2f", items.get(id).getStep())))
-                .append(" §e[§cРед§e]§r")
-                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st change n:"+name+" id:"+ idi+" s:"))
-                .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
+                .append("\n§eЦена продажи: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getSellOne())))
+                .append("\n§eЦена покупки: §6" + (items.get(id).getBasePrice() == -1 ? "" : String.format("%.2f", items.get(id).getBuyOne())))
                 .create());
 
     }
@@ -376,25 +309,18 @@ public class Stores implements InventoryHolder {
         return false;
     }
 
-    public void calculVolume(){
-        volume = 0;
-        curVolume = 0;
-        for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
-            volume += item.getValue().getMaxCount() * item.getValue().getPrice();
-            curVolume += item.getValue().getCount() * item.getValue().getPrice();
-        }
-    }
-    public void sellOne(Player p, StoreItems storeItem)
+    public void sellOne(Player p, StoreItems storeItem, Stores store)
     {
         PlayerInventory inv = p.getInventory();
         ItemStack item = storeItem.getItem();
-        if  (item == null)
+        double sell =  storeItem.getSellOne();
+        if (item == null)
             return;
         if (!inv.contains(item.getType()))
             return;
         int position = inv.first(item.getType());
         ItemStack temp = inv.getItem(position);
-        if (temp != null && storeItem.getCount() > 0)
+        if (temp != null && store.getCapital() >= sell )
         {
             if (temp.getAmount() == 1)
                 inv.clear(position);
@@ -403,118 +329,155 @@ public class Stores implements InventoryHolder {
                 temp.setAmount(temp.getAmount() -1);
                 inv.setItem(position, temp);
             }
-            int count = storeItem.getCount() - 1;
-            storeItem.setCount(count);
+            int count = storeItem.getCount() + 1;
             ApiDatabase.updateCount(name, storeItem.getPlace(), count);
-            ApiDatabase.updateCapital(name,storeItem.getPrice());
-            EconomyManager.payMoney(p, storeItem.getPrice());
-            capital += storeItem.getPrice();
+            storeItem.setCount(count);
+            ApiDatabase.updateCapital(name,store.getCapital() - sell );
+            store.setCapital(store.getCapital() - sell);
+            EconomyManager.payMoney(p, sell);
             updateStore(p);
         }
+        else
+            p.sendMessage("В магазине не достаточно денег чтобы вам заплатить");
     }
 
-    public void sellAll(Player p, StoreItems storeItem)
+    private int firstNoStack(PlayerInventory invP, ItemStack item){
+
+        ItemStack[] tempItems = invP.getContents();
+        for (int  i = 0; i < tempItems.length; i++){
+//            if (tempItems[i] != null){
+//                Message.toConsole("id: " + i +" - "+tempItems[i].getAmount() +" < " + tempItems[i].getMaxStackSize());
+//                Message.toConsole(tempItems[i].getType().name() +" = " + item.getType().name());
+//
+//            }
+            if (tempItems[i] != null && tempItems[i].getType().name().equals(item.getType().name())){
+                if (tempItems[i].getAmount() < tempItems[i].getMaxStackSize())
+                {
+//                    Message.toConsole(i+"");
+//                    Message.toConsole(tempItems[i].getType().name());
+                    return i;
+                }
+            }
+
+        }
+        return -1;
+    }
+
+    public void buyOne(Player p, StoreItems storeItem, Stores store)
     {
         PlayerInventory invP = p.getInventory();
         ItemStack item = storeItem.getItem();
-        if (item != null) {
-            int count = storeItem.getCount();
-            if (invP.contains(item.getType()))
-            {
-                HashMap<Integer, ? extends ItemStack> map = invP.all(item.getType());
-                int countP = 0;
-                for (HashMap.Entry<Integer, ? extends ItemStack> it : map.entrySet()) {
-                    int itemCount = it.getValue().getAmount();
-                    if (count >= countP + itemCount)
-                    {
-                        countP += itemCount;
-                        invP.clear(it.getKey());
-                    }
-                    else
-                    {
-                        invP.getItem(it.getKey()).setAmount(itemCount - (count - countP));
-                        countP += count - countP;
-                    }
+        double buy =  storeItem.getBuyOne();
+        if (item == null)
+            return;
+        int position = firstNoStack(invP, item);
+        if (storeItem.getCount() > 0 )
+        {
+            if (!EconomyManager.takeMoney(p, buy)){
+                p.closeInventory();
+                p.sendMessage("У тебя не достаточно денег");
+                return;
+            }
+            if (position != -1){
+//                p.sendMessage("test 1 " + position);
+                ItemStack temp = invP.getItem(position);
+                temp.add();
+                invP.setItem(position, temp);
+            }
+            else {
+//                p.sendMessage("test 2 " + position);
+                position = invP.firstEmpty();
+                if (position == -1){
+                    p.closeInventory();
+                    p.sendMessage("В инвенторе нет места");
+                    return;
                 }
-                storeItem.setCount(count - countP);
-                ApiDatabase.updateCount(name, storeItem.getPlace(), count - countP);
-                ApiDatabase.updateCapital(name,countP * storeItem.getPrice());
-                EconomyManager.payMoney(p, countP * storeItem.getPrice());
-                capital += countP * storeItem.getPrice();
-                updateStore(p);
+                invP.setItem(position, new ItemStack(item.getType()));
             }
+            int count = storeItem.getCount() - 1;
+            ApiDatabase.updateCount(name, storeItem.getPlace(), count);
+            storeItem.setCount(count);
+            ApiDatabase.updateCapital(name,store.getCapital() + buy );
+            store.setCapital(store.getCapital() + buy);
+            updateStore(p);
+        }
+        else {
+            p.sendMessage("На складе нет данного предмета");
         }
     }
 
-    public void bust ()
+    public void buyMore(Player p, StoreItems storeItem, Stores store)
     {
-        for (HashMap.Entry<Integer, StoreItems> item : items.entrySet()){
-            StoreItems StoreItem = item.getValue();
-            int maxCount = StoreItem.getMaxCount();
-            int count = StoreItem.getCount();
-            double price = StoreItem.getPrice();
-            double step = StoreItem.getStep();
-            double percent30 = maxCount * 0.30;
-            double percent70 = maxCount * 0.70;
 
-            if (count < percent30)
-            {
-                double minPrice = StoreItem.getMinPrice();
-                if (status == StatusStore.SAVE)
-                    ApiDatabase.updatePrice(name, StoreItem.getPlace(), Math.max(price - step, minPrice));
-                StoreItem.setPrice(Math.max(price - step, minPrice));
-            }
-            else if (count > percent70)
-            {
-                double maxPrice = StoreItem.getMaxPrice();
-                if (status == StatusStore.SAVE)
-                    ApiDatabase.updatePrice(name, StoreItem.getPlace(), Math.min(price + step, maxPrice));
-                StoreItem.setPrice(Math.min(price + step, maxPrice));
-            }
-            if (status == StatusStore.SAVE)
-                ApiDatabase.updateCount(name, StoreItem.getPlace(), maxCount);
-            StoreItem.setCount(maxCount);
+        ItemStack item = storeItem.getItem();
+        if (item == null)
+            return;
 
+        PlayerInventory invP = p.getInventory();
+        int position = invP.firstEmpty();
+        if (position == -1){
+            p.closeInventory();
+            p.sendMessage("В инвенторе нет места");
+            return;
         }
-        updateStore();
-        List<HumanEntity> players = inv.getViewers();
-        Player p;
-        for (HumanEntity pl: players ){
-            if (pl instanceof Player){
-                p = (Player)pl;
-                p.updateInventory();
+        if (storeItem.getCount() > 0 )
+        {
+            int size = item.getMaxStackSize();
+            if (storeItem.getCount() < item.getMaxStackSize()){
+                size = storeItem.getCount();
             }
+            double buy =  storeItem.getBuyMore(size);
+            if (!EconomyManager.takeMoney(p, buy)){
+                p.closeInventory();
+                p.sendMessage("У тебя не достаточно денег");
+                return;
+            }
+            ItemStack temp = new ItemStack(item.getType());
+            temp.setAmount(size);
+            invP.setItem(position, temp);
+            int count = storeItem.getCount() - size;
+            ApiDatabase.updateCount(name, storeItem.getPlace(), count);
+            storeItem.setCount(count);
+            ApiDatabase.updateCapital(name,store.getCapital() + buy );
+            store.setCapital(store.getCapital() + buy);
+            updateStore(p);
         }
-
+        else {
+            p.sendMessage("На складе нет данного предмета");
+        }
     }
+    public void sellMore(Player p, StoreItems storeItem, Stores store, ItemStack sellItem, int position)
+    {
+        PlayerInventory inv = p.getInventory();
+        ItemStack item = storeItem.getItem();
+        double sell =  storeItem.getSellMore(sellItem.getAmount());
+        if (item == null)
+            return;
+        if (!inv.contains(item.getType()))
+            return;
+
+        if (store.getCapital() >= sell )
+        {
+            inv.clear(position);
+            int count = storeItem.getCount() + sellItem.getAmount();
+            ApiDatabase.updateCount(name, storeItem.getPlace(), count);
+            storeItem.setCount(count);
+            ApiDatabase.updateCapital(name,store.getCapital() - sell );
+            store.setCapital(store.getCapital() - sell);
+            EconomyManager.payMoney(p, sell);
+            updateStore(p);
+        }
+        else
+            p.sendMessage("В магазине не достаточно денег чтобы вам заплатить");
+    }
+
 
     @Override
     public Inventory getInventory() {
         return inv;
     }
-    public double getCapital() {
-        return capital;
-    }
 
-    public void setCapital(double capital) {
-        this.capital = capital;
-    }
 
-    public double getVolume() {
-        return volume;
-    }
-
-    public void setVolume(double volume) {
-        this.volume = volume;
-    }
-
-    public double getCurVolume() {
-        return curVolume;
-    }
-
-    public void setCurVolume(double curVolume) {
-        this.curVolume = curVolume;
-    }
     public UUID getU() {
         return u;
     }
@@ -522,7 +485,23 @@ public class Stores implements InventoryHolder {
     public void setU(UUID u) {
         this.u = u;
     }
+    public UUID getPl() {
+        return pl;
+    }
 
+    public void setPl(UUID pl) {
+        this.pl = pl;
+    }
+    public double getCapital() {
+        return capital;
+    }
+
+    public int getRow() {
+        return row;
+    }
+    public void setCapital(double capital) {
+        this.capital = capital;
+    }
     public void setStatus(StatusStore status) {
         this.status = status;
     }

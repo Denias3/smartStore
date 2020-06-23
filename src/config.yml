@@ -6,6 +6,8 @@ connection:
   password: 'root'
   enable: false
 
-refresh:
-  enable: true
-  timer: 144000
+
+coefficients:
+  buy: 1.1
+  sell: 0.9
+  warehouse: 100000

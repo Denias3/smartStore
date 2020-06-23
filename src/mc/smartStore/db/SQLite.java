@@ -11,10 +11,6 @@ public class SQLite  extends AbstractSql {
         super(file);
     }
 
-    @Override
-    public DBType getType() {
-        return DBType.MYSQL;
-    }
 
     @Override
     public String getDriver() {

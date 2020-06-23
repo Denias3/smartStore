@@ -1,11 +1,9 @@
-package mc.smartStore.handlers.inventoryPlayer;
+package mc.smartStore.handlers.inventoryStore;
 
 import mc.smartStore.Message;
 import mc.smartStore.Stores;
 import mc.smartStore.db.ApiDatabase;
 import mc.smartStore.handlers.MenuElement;
-import mc.smartStore.utils.PermissionClick;
-import org.bukkit.event.inventory.ClickType;
 
 public class SaveStore extends MenuElement {
     public SaveStore(Stores stores, int id) {

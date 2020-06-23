@@ -25,21 +25,19 @@ public abstract class AbstractSql {
         this.file = file;
     }
 
-    public abstract DBType getType();
-
     public Connection getConnection() throws SQLException {
         if(con != null && !con.isClosed() & con.isValid(1000)) {
             return con;
         }
-        if (ApiDatabase.DB == DBType.SQLITE){
+        else if (ApiDatabase.DB == DBType.SQLITE){
             String url = getDriver()+ this.file;
             SQLiteConfig config = new SQLiteConfig();
             config.enforceForeignKeys(true);
-            return DriverManager.getConnection(url, config.toProperties());
+            con = DriverManager.getConnection(url, config.toProperties());
         }
         else if (ApiDatabase.DB == DBType.MYSQL){
             String url = getDriver() +host+":"+port+"/"+database;
-            return con = DriverManager.getConnection(url, user, password);
+            con = DriverManager.getConnection(url, user, password);
         }
         return con;
     }

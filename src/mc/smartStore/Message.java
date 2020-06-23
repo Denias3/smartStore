@@ -1,9 +1,16 @@
 package mc.smartStore;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import org.bukkit.Bukkit;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Message {
-    public static String prefix = "§6[§eСкупщик§6] §f";
+    public static String prefix = "§6[§eМагаз§6] §f";
 
     public static void toConsole(String msg){
         Bukkit.getConsoleSender().sendMessage(prefix+msg);
@@ -41,23 +48,71 @@ public class Message {
         return (prefix +  "У тебя нет прав удалять магазин");
     }
 
-    public static String infoStore(Stores stores){
-        return ("§7------------------------------------\n"+
-                "§fОборот: §5" + String.format("%.2f", stores.getCapital())+ "§d$\n"+
-                "§fОбъем: §5" + String.format("%.2f", stores.getCurVolume())+ "§d$" +"§f/§5" +
-                String.format("%.2f", stores.getVolume())+ "§d$\n" +
-                "§5§l| §fКаждые 2 часа количество товара\n"+
-                "§5§l| §fпополняется до максимума\n"+
-                "§5§l| §fи цена меняется в зависимости\n"+
-                "§5§l| §fот того какое количество отсалось.\n"+
-                "§5§l| §fКоличество общее для всех.\n"+
-                "§5§l| §fЕсли продали больше 70% то\n"+
-                "§5§l| §fцена уменьшается на шаг.\n"+
-                "§5§l| §fЕсли продали меньше 30% то\n"+
-                "§5§l| §fцена увеличивается на шаг.\n"+
-                "§5§l| §fЕсли продали в районе от \n"+
-                "§5§l| §f30% до 70% то цена не меняется.\n"+
-                "§7------------------------------------");
+    public static BaseComponent[] infoStore(Stores stores){
+        return (new ComponentBuilder("§7------------------------------------\n")
+                .append("§5§l| §fДеньги магазина: " + String.format("%.2f",stores.getCapital()))
+                .append(" §e[§cРед§e]§r")
+                .event(new ClickEvent( ClickEvent.Action.SUGGEST_COMMAND, "/st capital "+stores.getName()+" "))
+                .event(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder( "Нажми чтобы изменить" ).create()))
+                .append("\n§7------------------------------------")
+                .create());
+
+    }
+    public static String notCountLineStore(){
+        return (prefix + "Не правильное количесто строк в магазине");
+    }
+
+    //Menu
+    public static String menuEdit(){
+        return ("Редактировать");
+    }
+    public static String menuInfo(){
+        return ("Информация");
+    }
+    public static List<String> menuInfoMore(Stores stores){
+        List<String> lore = new ArrayList<>();
+        lore.add("§7Нажмите чтобы отобразить в чате");
+        lore.add("");
+        lore.add("§5§l| §fДеньги магазина: " + String.format("%.2f",stores.getCapital()));
+        return (lore);
+    }
+
+    public static List<String> menuEditDescription(){
+        List<String> lore = new ArrayList<>();
+        lore.add("§cДля админов");
+        return (lore);
+    }
+    public static String menuSave(){
+        return ("Сохранить");
+    }
+    public static String menuDelete(){
+        return ("Удалить");
+    }
+    public static String menuMove(){
+        return ("Режим перемещение предметов");
+    }
+    public static String menuData(){
+        return ("Режим установки данных о товаре");
+    }
+    public static List<String> menuProduct(StoreItems itemp){
+        int size;
+        if (itemp.getCount() >= itemp.getItem().getMaxStackSize()) {
+            size = itemp.getItem().getMaxStackSize();
+        }
+        else
+            size = itemp.getCount();
+        List<String> lore = new ArrayList<>();
+        lore.add("§7ПКМ - Купить");
+        lore.add("§7Shift + ПКМ - Купить " + size);
+        lore.add("§7Shift + ЛКМ - Информация о товаре");
+        lore.add("");
+        lore.add("§fЦена продажи: §5" + (itemp.getBasePrice() == -1 ? "" : String.format("%.2f", itemp.getSellOne())) + "§d$");
+        lore.add("§fЦена покупки: §5" + (itemp.getBasePrice() == -1 ? "" : String.format("%.2f", itemp.getBuyOne())) + "§d$");
+        lore.add("§fЦена покупки "+size+": §5" + (itemp.getBasePrice() == -1 ? "" : String.format("%.2f", itemp.getBuyMore(size))) + "§d$");
+
+        lore.add("");
+        lore.add("§fКоличество на складе: §5" + (itemp.getCount() == -1 ? "" : itemp.getCount()));
+        return (lore);
     }
 
 }

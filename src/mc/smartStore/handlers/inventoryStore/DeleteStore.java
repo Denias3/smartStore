@@ -1,11 +1,9 @@
-package mc.smartStore.handlers.inventoryPlayer;
+package mc.smartStore.handlers.inventoryStore;
 
 import mc.smartStore.Message;
 import mc.smartStore.SmartStore;
 import mc.smartStore.Stores;
 import mc.smartStore.handlers.MenuElement;
-import mc.smartStore.utils.PermissionClick;
-import org.bukkit.event.inventory.ClickType;
 
 public class DeleteStore extends MenuElement {
     public DeleteStore(Stores stores, int id) {

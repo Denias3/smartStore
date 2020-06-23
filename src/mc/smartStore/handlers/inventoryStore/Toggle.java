@@ -1,10 +1,8 @@
-package mc.smartStore.handlers.inventoryPlayer;
+package mc.smartStore.handlers.inventoryStore;
 
 import mc.smartStore.Message;
 import mc.smartStore.Stores;
 import mc.smartStore.handlers.MenuElement;
-import mc.smartStore.utils.PermissionClick;
-import org.bukkit.event.inventory.ClickType;
 
 public class Toggle extends MenuElement {
     public Toggle(Stores stores, int id) {

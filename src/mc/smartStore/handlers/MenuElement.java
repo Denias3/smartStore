@@ -1,8 +1,6 @@
 package mc.smartStore.handlers;
 
-import mc.smartStore.Message;
 import mc.smartStore.Stores;
-import mc.smartStore.utils.PermissionClick;
 import mc.smartStore.utils.StatusStore;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -37,7 +35,6 @@ public abstract class MenuElement {
     public void click(Player p, InventoryClickEvent e){
         this.p = p;
         this.e = e;
-
         if (id >= i.getSize() - 9 | stores.getStatus() != StatusStore.MOVE)
             e.setCancelled(true);
         clickChoice(e.getClick());

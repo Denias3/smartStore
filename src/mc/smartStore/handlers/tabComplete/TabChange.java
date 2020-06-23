@@ -1,4 +1,4 @@
-package mc.smartStore.handlers.TabComplete;
+package mc.smartStore.handlers.tabComplete;
 
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import mc.smartStore.SmartStore;

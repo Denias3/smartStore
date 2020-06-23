@@ -17,7 +17,6 @@ public class Reload {
                 e.printStackTrace();
             }
             ApiDatabase.init();
-            SmartStore.refresh.reload();
             p.sendMessage(Message.prefix + "Ты обновил конфиг");
         }
         else
